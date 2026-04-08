@@ -14,7 +14,11 @@ async function callGemini(prompt: string, key: string): Promise<string> {
       generationConfig: { responseMimeType: 'application/json' },
     }),
   })
-  if (!res.ok) throw new Error(`Gemini API chyba: ${res.status}`)
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => null) as { error?: { message?: string } } | null
+    const msg = errBody?.error?.message ?? res.statusText
+    throw new Error(`Gemini API chyba ${res.status}: ${msg}`)
+  }
   const json = await res.json()
   const text = json.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) throw new Error('Prázdná odpověď od Gemini')
@@ -52,7 +56,11 @@ Pravidla:
 - Buď konkrétní — ne "různé weby" ale "zahradnické blogy a magazíny o bydlení"`
 
   const raw = await callGemini(prompt, geminiKey)
-  return JSON.parse(raw) as CustomerProfile
+  try {
+    return JSON.parse(raw) as CustomerProfile
+  } catch {
+    throw new Error(`analyzeCustomer: Gemini vrátil neplatný JSON. Začátek odpovědi: ${raw.slice(0, 200)}`)
+  }
 }
 
 // ── Prompt 2: Opportunity scoring ──────────────────────────────
@@ -65,7 +73,9 @@ export async function scoreOpportunities(
 ): Promise<Opportunity[]> {
   if (sites.length === 0) return []
 
-  const siteList = sites
+  const capped = sites.slice(0, 100)
+
+  const siteList = capped
     .map(s =>
       `${s.domain} | DR ${s.domain_rating ?? '?'} | ${s.org_traffic ?? '?'} nav/měs | ${s.refdomains ?? '?'} refdom | ${s.outgoing_links ?? '?'} outlinks`
     )
@@ -118,7 +128,7 @@ Vrať POUZE JSON (bez markdown bloků, bez \`\`\`):
 Nezahrnuj weby s relevanceScore pod 40. Seřaď sestupně podle relevanceScore.`
 
   const raw = await callGemini(prompt, geminiKey)
-  const parsed = JSON.parse(raw) as { opportunities: Array<{
+  let parsed: { opportunities: Array<{
     domain: string
     relevanceScore: number
     opportunityType: string
@@ -126,8 +136,19 @@ Nezahrnuj weby s relevanceScore pod 40. Seřaď sestupně podle relevanceScore.`
     reason: string
     outreachAngle: string
   }> }
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    throw new Error(`scoreOpportunities: Gemini vrátil neplatný JSON. Začátek odpovědi: ${raw.slice(0, 200)}`)
+  }
 
-  const metricsMap = new Map(sites.map(s => [s.domain, s]))
+  const VALID_OPPORTUNITY_TYPES = new Set<OpportunityType>([
+    'guest-post', 'resource-page', 'directory', 'mention',
+    'product-review', 'news-coverage', 'broken-link',
+  ])
+  const VALID_DIFFICULTY = new Set<OutreachDifficulty>(['easy', 'medium', 'hard'])
+
+  const metricsMap = new Map(capped.map(s => [s.domain, s]))
 
   return parsed.opportunities.map(o => {
     const m = metricsMap.get(o.domain)
@@ -136,9 +157,13 @@ Nezahrnuj weby s relevanceScore pod 40. Seřaď sestupně podle relevanceScore.`
       domain_rating: m?.domain_rating ?? null,
       org_traffic: m?.org_traffic ?? null,
       refdomains: m?.refdomains ?? null,
-      relevanceScore: o.relevanceScore,
-      opportunityType: o.opportunityType as OpportunityType,
-      outreachDifficulty: o.outreachDifficulty as OutreachDifficulty,
+      relevanceScore: Math.min(100, Math.max(0, Math.round(o.relevanceScore))),
+      opportunityType: VALID_OPPORTUNITY_TYPES.has(o.opportunityType as OpportunityType)
+        ? (o.opportunityType as OpportunityType)
+        : 'mention',
+      outreachDifficulty: VALID_DIFFICULTY.has(o.outreachDifficulty as OutreachDifficulty)
+        ? (o.outreachDifficulty as OutreachDifficulty)
+        : 'medium',
       reason: o.reason,
       outreachAngle: o.outreachAngle,
     }
