@@ -1226,3 +1226,73 @@
   .drawer { width: 100vw; }
   .drawer-fields-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Nastavení ─────────────────────────────────────────── */
+.nastaveni-page {
+  max-width: 560px;
+}
+
+.nastaveni-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.nastaveni-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.nastaveni-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nastaveni-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nastaveni-link {
+  font-size: 12px;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.nastaveni-link:hover {
+  text-decoration: underline;
+}
+
+.nastaveni-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.nastaveni-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.nastaveni-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}

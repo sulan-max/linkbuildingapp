@@ -3,11 +3,12 @@ import { PortfolioPage } from './pages/Portfolio'
 import { KontaktyPage } from './pages/Kontakty'
 import { PlanovaneLinkyPage } from './pages/PlanovaneLinky'
 import { AsistentPage } from './pages/Asistent'
+import { NastaveniPage } from './pages/Nastaveni'
 import { LoginScreen } from './components/LoginScreen'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
 
-type Page = 'dashboard' | 'portfolio' | 'asistent' | 'planovane' | 'kontakty' | 'statistiky' | 'nastaveni'
+type Page = 'dashboard' | 'portfolio' | 'asistent' | 'planovane' | 'kontakty' | 'statistiky' | 'nastaveni' | 'hledani'
 
 const PAGE_TITLES: Record<Page, string> = {
   dashboard: 'Dashboard',
@@ -17,12 +18,14 @@ const PAGE_TITLES: Record<Page, string> = {
   kontakty: 'Kontakty',
   statistiky: 'Statistiky',
   nastaveni: 'Nastavení',
+  hledani: 'Hledání nových webů',
 }
 
 const NAV_ITEMS: { id: Page; label: string; icon: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
   { id: 'portfolio', label: 'Portfolio', icon: '🔗' },
   { id: 'asistent', label: 'Asistent', icon: '🤖' },
+  { id: 'hledani', label: 'Hledání webů', icon: '🔍' },
   { id: 'planovane', label: 'Plánované', icon: '📋' },
   { id: 'kontakty', label: 'Kontakty', icon: '👤' },
   { id: 'statistiky', label: 'Statistiky', icon: '📊' },
@@ -138,7 +141,8 @@ function App() {
           {page === 'asistent' && <AsistentPage />}
           {page === 'planovane' && <PlanovaneLinkyPage />}
           {page === 'kontakty' && <KontaktyPage />}
-          {page !== 'dashboard' && page !== 'portfolio' && page !== 'asistent' && page !== 'planovane' && page !== 'kontakty' && (
+          {page === 'nastaveni' && <NastaveniPage />}
+          {page !== 'dashboard' && page !== 'portfolio' && page !== 'asistent' && page !== 'planovane' && page !== 'kontakty' && page !== 'nastaveni' && page !== 'hledani' && (
             <PlaceholderContent page={page} />
           )}
         </main>
