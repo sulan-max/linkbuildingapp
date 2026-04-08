@@ -19,3 +19,36 @@ export interface WebEntry {
   kdeMuzeme: string
   kdeNepouzivat: string
 }
+
+export interface CustomerProfile {
+  mainNiche: string
+  subNiches: string[]
+  businessType: 'eshop' | 'sluzba' | 'blog' | 'b2b' | 'lokalni-sluzba'
+  targetAudience: string
+  czechKeywords: string[]
+  idealSiteTypes: string[]
+  linkContext: string
+}
+
+export type OpportunityType =
+  | 'guest-post'
+  | 'resource-page'
+  | 'directory'
+  | 'mention'
+  | 'product-review'
+  | 'news-coverage'
+  | 'broken-link'
+
+export type OutreachDifficulty = 'easy' | 'medium' | 'hard'
+
+export interface Opportunity {
+  domain: string
+  domain_rating: number | null
+  org_traffic: number | null
+  refdomains: number | null
+  relevanceScore: number
+  opportunityType: OpportunityType
+  outreachDifficulty: OutreachDifficulty
+  reason: string
+  outreachAngle: string
+}
