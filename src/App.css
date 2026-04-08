@@ -1296,3 +1296,181 @@
   color: var(--text-muted);
   margin: 0;
 }
+
+/* ── Hledání nových webů ────────────────────────────────── */
+.hledani-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hledani-keys-warning {
+  font-size: 13px;
+  color: #d97706;
+  margin: 8px 0 0;
+}
+
+.hledani-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hledani-results-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hledani-results-count {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.hledani-results-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.hledani-niche-badge {
+  background: var(--primary);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Opportunity grid ──────────────────────────────────── */
+.opp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 16px;
+}
+
+.opp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+
+.opp-card:hover {
+  border-color: var(--primary);
+}
+
+.opp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.opp-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.opp-card-domain {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.opp-card-domain:hover {
+  text-decoration: underline;
+}
+
+.opp-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.opp-score {
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.badge-traffic {
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.badge-difficulty {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 0;
+}
+
+.opp-reason {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.opp-angle {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.opp-angle-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.opp-angle p {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.opp-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+}

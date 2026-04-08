@@ -4,6 +4,7 @@ import { KontaktyPage } from './pages/Kontakty'
 import { PlanovaneLinkyPage } from './pages/PlanovaneLinky'
 import { AsistentPage } from './pages/Asistent'
 import { NastaveniPage } from './pages/Nastaveni'
+import { HledaniWebuPage } from './pages/HledaniWebu'
 import { LoginScreen } from './components/LoginScreen'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
@@ -142,6 +143,7 @@ function App() {
           {page === 'planovane' && <PlanovaneLinkyPage />}
           {page === 'kontakty' && <KontaktyPage />}
           {page === 'nastaveni' && <NastaveniPage />}
+          {page === 'hledani' && <HledaniWebuPage />}
           {page !== 'dashboard' && page !== 'portfolio' && page !== 'asistent' && page !== 'planovane' && page !== 'kontakty' && page !== 'nastaveni' && page !== 'hledani' && (
             <PlaceholderContent page={page} />
           )}
