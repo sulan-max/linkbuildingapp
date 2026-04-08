@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { getGeminiKey, getAhrefsKey, getCountry, saveSettings } from '../lib/settings'
 
 export function NastaveniPage() {
@@ -6,12 +6,16 @@ export function NastaveniPage() {
   const [ahrefs, setAhrefs] = useState(getAhrefsKey)
   const [country, setCountry] = useState(getCountry)
   const [saved, setSaved] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleSave = () => {
     saveSettings(gemini.trim(), ahrefs.trim(), country)
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setSaved(false), 2000)
   }
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
 
   return (
     <div className="nastaveni-page">

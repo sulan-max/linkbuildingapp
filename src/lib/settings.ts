@@ -5,7 +5,9 @@ const KEYS = {
 } as const
 
 export function getGeminiKey(): string {
-  return localStorage.getItem(KEYS.gemini) ?? (import.meta.env.VITE_GEMINI_API_KEY as string) ?? ''
+  const stored = localStorage.getItem(KEYS.gemini)
+  if (stored) return stored  // non-empty stored value wins
+  return (import.meta.env.VITE_GEMINI_API_KEY as string) ?? ''
 }
 
 export function getAhrefsKey(): string {
@@ -17,7 +19,9 @@ export function getCountry(): string {
 }
 
 export function saveSettings(gemini: string, ahrefs: string, country: string): void {
-  localStorage.setItem(KEYS.gemini, gemini)
-  localStorage.setItem(KEYS.ahrefs, ahrefs)
+  if (gemini) localStorage.setItem(KEYS.gemini, gemini)
+  else localStorage.removeItem(KEYS.gemini)
+  if (ahrefs) localStorage.setItem(KEYS.ahrefs, ahrefs)
+  else localStorage.removeItem(KEYS.ahrefs)
   localStorage.setItem(KEYS.country, country)
 }
