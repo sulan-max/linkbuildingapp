@@ -49,15 +49,16 @@ function extractDomain(url: string): string {
 }
 
 function today(): string {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 // ── Public types ────────────────────────────────────────────────
 
 export interface CompetitorResult {
   domain: string
-  domain_rating: number
-  traffic: number
+  domain_rating: number | null
+  traffic: number | null
   keywords_common: number
 }
 
@@ -98,8 +99,8 @@ export async function getOrganicCompetitors(
     order_by: 'traffic:desc',
   }, ahrefsKey) as { competitors?: Array<{
     competitor_domain: string
-    domain_rating: number
-    traffic: number
+    domain_rating: number | null
+    traffic: number | null
     keywords_common: number
   }> }
 

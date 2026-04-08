@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +15,19 @@ serve(async (req: Request) => {
 
     if (!ahrefsKey) {
       return new Response(JSON.stringify({ error: 'Chybí Ahrefs API klíč' }), {
+        status: 400,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Allowlist of permitted Ahrefs endpoints
+    const ALLOWED_ENDPOINTS = new Set([
+      'site-explorer/organic-competitors',
+      'serp-overview',
+      'batch-analysis',
+    ])
+    if (!ALLOWED_ENDPOINTS.has(endpoint)) {
+      return new Response(JSON.stringify({ error: 'Endpoint not allowed' }), {
         status: 400,
         headers: { ...CORS, 'Content-Type': 'application/json' },
       })
@@ -39,7 +52,13 @@ serve(async (req: Request) => {
       })
     }
 
-    const data = await ahrefsRes.json()
+    const raw = await ahrefsRes.text()
+    let data: unknown
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      data = { error: `Non-JSON response from Ahrefs: ${raw.slice(0, 200)}` }
+    }
 
     return new Response(JSON.stringify(data), {
       status: ahrefsRes.status,
