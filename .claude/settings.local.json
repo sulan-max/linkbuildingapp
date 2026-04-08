@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ':*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(curl:*)",
+      "Bash(python -c \"import sys,json; models=json.load\\(sys.stdin\\).get\\('models',[]\\); [print\\(m['name']\\) for m in models]\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const m=JSON.parse\\(d\\).models||[];m.forEach\\(x=>console.log\\(x.name\\)\\)}\\)\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const r=JSON.parse\\(d\\);console.log\\(JSON.stringify\\(r.candidates?.[0]?.content?.parts?.[0]?.text || r.error || r\\)\\)}\\)\")",
+      "mcp__claude_ai_Ahrefs__doc"
+    ]
+  }
+}
