@@ -345,41 +345,35 @@
 .filter-select {
   height: 36px;
   padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
   background: var(--bg);
   color: var(--text);
   font-size: 13px;
   cursor: pointer;
+  font-family: var(--sans);
   min-width: 160px;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--accent);
-}
-
-.filter-dr {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  border-color: var(--primary);
 }
 
 .filter-input {
-  width: 72px;
   height: 36px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  padding: 0 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
   background: var(--bg);
   color: var(--text);
   font-size: 13px;
-  text-align: center;
+  font-family: var(--sans);
 }
 
 .filter-input:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--primary);
 }
 
 .filter-dr-sep {
