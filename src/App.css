@@ -1257,7 +1257,15 @@
   margin-bottom: 4px;
 }
 
-.login-logo-icon { font-size: 28px; }
+.login-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .login-logo-text {
   font-size: 26px;
