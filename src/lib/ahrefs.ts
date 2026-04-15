@@ -4,21 +4,35 @@ const PROXY_URL = `${SUPABASE_URL}/functions/v1/ahrefs-proxy`
 
 // ── Internal helpers ────────────────────────────────────────────
 
+function extractErrorMessage(data: unknown, status: number): string {
+  if (data && typeof data === 'object') {
+    const d = data as Record<string, unknown>
+    const msg = d.error ?? d.message ?? d.msg
+    if (msg && typeof msg === 'string') return msg
+    if (msg && typeof msg === 'object') {
+      const inner = (msg as Record<string, unknown>).message ?? (msg as Record<string, unknown>).description
+      if (inner) return String(inner)
+    }
+  }
+  return `HTTP ${status}: ${JSON.stringify(data).slice(0, 200)}`
+}
+
 async function proxyGet(
   endpoint: string,
   params: Record<string, string>,
   ahrefsKey: string
 ): Promise<unknown> {
-  const res = await fetch(PROXY_URL, {
+const res = await fetch(PROXY_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${SUPABASE_ANON}`,
     },
     body: JSON.stringify({ endpoint, method: 'GET', params, ahrefsKey }),
+    signal: AbortSignal.timeout(55000),
   })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error ?? `Ahrefs chyba ${res.status}`)
+  if (!res.ok) throw new Error(extractErrorMessage(data, res.status))
   return data
 }
 
@@ -34,9 +48,10 @@ async function proxyPost(
       'Authorization': `Bearer ${SUPABASE_ANON}`,
     },
     body: JSON.stringify({ endpoint, method: 'POST', body, ahrefsKey }),
+    signal: AbortSignal.timeout(55000),
   })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error ?? `Ahrefs chyba ${res.status}`)
+  if (!res.ok) throw new Error(extractErrorMessage(data, res.status))
   return data
 }
 
@@ -95,7 +110,7 @@ export async function getOrganicCompetitors(
     date: today(),
     select: 'competitor_domain,domain_rating,traffic,keywords_common',
     mode: 'subdomains',
-    limit: '40',
+    limit: '20',
     order_by: 'traffic:desc',
   }, ahrefsKey) as { competitors?: Array<{
     competitor_domain: string
@@ -185,6 +200,33 @@ export async function batchDomainMetrics(
     backlinks_nofollow: t.backlinks_nofollow,
     outgoing_links: t.outgoing_links,
   }))
+}
+
+export interface SourceMetrics {
+  domain: string
+  domain_rating: number | null
+  org_traffic: number | null
+}
+
+/** Get organic traffic and DR for a source URL domain (for backlink analysis). */
+export async function getSourceMetrics(
+  url: string,
+  ahrefsKey: string
+): Promise<SourceMetrics> {
+  const domain = extractDomain(url)
+  const data = await proxyGet('site-explorer/metrics', {
+    target: domain,
+    date: today(),
+    select: 'domain_rating,org_traffic',
+    mode: 'subdomains',
+    protocol: 'both',
+  }, ahrefsKey) as { domain_rating?: number | null; org_traffic?: number | null }
+
+  return {
+    domain,
+    domain_rating: data.domain_rating ?? null,
+    org_traffic: data.org_traffic ?? null,
+  }
 }
 
 // ── Quality filter ──────────────────────────────────────────────

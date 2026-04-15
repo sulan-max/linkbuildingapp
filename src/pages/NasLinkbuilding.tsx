@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { CLIENTS } from '../config/clients'
 import { useLinkbuildingSheet } from '../hooks/useLinkbuildingSheet'
+import { AnalyzaOdkazuDrawer } from '../components/AnalyzaOdkazuDrawer'
 
 function getDrClass(dr: number | null): string {
   if (dr === null) return 'dr-gray'
@@ -44,6 +45,7 @@ export function NasLinkbuildingPage() {
   const [preset, setPreset] = useState<Preset>('')
   const [filterUrl, setFilterUrl] = useState('')
   const [drMin, setDrMin] = useState('')
+  const [analyzaRow, setAnalyzaRow] = useState<{ url: string; dr: number | null } | null>(null)
 
   const client = CLIENTS[clientIdx] ?? null
   const { rows, loading, error } = useLinkbuildingSheet(client)
@@ -172,12 +174,13 @@ export function NasLinkbuildingPage() {
                 <th>Měsíc / Rok</th>
                 <th>URL odkazu</th>
                 <th>DR / DA</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="nas-lb-empty">
+                  <td colSpan={4} className="nas-lb-empty">
                     {rows.length === 0 ? 'Žádná data v sheetu.' : 'Žádné výsledky — zkus změnit filtry.'}
                   </td>
                 </tr>
@@ -201,12 +204,32 @@ export function NasLinkbuildingPage() {
                         </span>
                       ) : '—'}
                     </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button
+                        className="nas-lb-analyze-btn"
+                        onClick={() => setAnalyzaRow({ url: row.url, dr: row.drDa })}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        Analyzovat
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* AI analýza drawer */}
+      {analyzaRow && (
+        <AnalyzaOdkazuDrawer
+          url={analyzaRow.url}
+          dr={analyzaRow.dr}
+          onClose={() => setAnalyzaRow(null)}
+        />
       )}
     </div>
   )

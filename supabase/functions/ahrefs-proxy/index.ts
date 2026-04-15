@@ -23,8 +23,10 @@ serve(async (req: Request) => {
     // Allowlist of permitted Ahrefs endpoints
     const ALLOWED_ENDPOINTS = new Set([
       'site-explorer/organic-competitors',
+      'site-explorer/metrics',
       'serp-overview',
       'batch-analysis',
+      'subscription-info/limits-and-usage',
     ])
     if (!ALLOWED_ENDPOINTS.has(endpoint)) {
       return new Response(JSON.stringify({ error: 'Endpoint not allowed' }), {
@@ -36,6 +38,8 @@ serve(async (req: Request) => {
     const baseUrl = `https://api.ahrefs.com/v3/${endpoint}`
     let ahrefsRes: Response
 
+    const timeout = AbortSignal.timeout(45000)
+
     if (method === 'POST') {
       ahrefsRes = await fetch(baseUrl, {
         method: 'POST',
@@ -44,11 +48,13 @@ serve(async (req: Request) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
+        signal: timeout,
       })
     } else {
       const qs = new URLSearchParams(params as Record<string, string>).toString()
       ahrefsRes = await fetch(`${baseUrl}?${qs}`, {
         headers: { 'Authorization': `Bearer ${ahrefsKey}` },
+        signal: timeout,
       })
     }
 
