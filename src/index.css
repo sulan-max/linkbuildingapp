@@ -1,26 +1,27 @@
 :root {
   /* Creaticom.cz color palette */
-  --primary: #0693e3;
-  --primary-dark: #0578c1;
-  --primary-light: rgba(6, 147, 227, 0.1);
+  --primary: #e3341b;
+  --primary-dark: #c42d17;
+  --primary-light: rgba(227, 52, 27, 0.08);
 
   --text: #32373c;
   --text-muted: #6b7280;
-  --text-heading: #111827;
+  --text-heading: #0f172a;
 
   --bg: #ffffff;
-  --bg-secondary: #f3f4f6;
+  --bg-secondary: #f1f5f9;
   --bg-dark: #111827;
   --bg-dark-hover: #1f2937;
 
-  --border: #e5e7eb;
+  --border: #e2e8f0;
   --border-dark: #374151;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 6px 6px 9px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10);
 
   --radius-sm: 4px;
+  --radius: 8px;
   --radius-md: 8px;
   --radius-lg: 12px;
 
