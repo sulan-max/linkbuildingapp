@@ -1300,42 +1300,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* ============================================================
-   TOPBAR USER
-   ============================================================ */
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.topbar-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.topbar-avatar-letter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.topbar-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
-  max-width: 160px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .btn-outline {
   background: transparent;
   border: 1.5px solid var(--border);
