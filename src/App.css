@@ -1406,19 +1406,19 @@
   margin: 0;
 }
 
-/* ── Náš linkbuilding ───────────────────────────────────── */
+/* ============================================================
+   NAS LINKBUILDING PAGE
+   ============================================================ */
 .nas-lb-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-
 .nas-lb-heading {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-heading);
-  letter-spacing: -0.3px;
 }
 
 .nas-lb-filters {
@@ -1430,66 +1430,65 @@
 
 .nas-lb-presets {
   display: flex;
-  gap: 4px;
-  background: var(--bg-secondary, #f3f4f6);
-  border-radius: 8px;
-  padding: 3px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .nas-lb-preset-btn {
-  padding: 5px 12px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 500;
+  border: 1.5px solid var(--border);
+  color: #64748b;
+  background: var(--bg);
   cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
+  transition: all 0.12s;
+  font-family: var(--sans);
 }
 
 .nas-lb-preset-btn:hover {
-  color: var(--text);
+  border-color: #cbd5e1;
+  color: var(--text-heading);
 }
 
 .nas-lb-preset-btn.active {
-  background: var(--bg);
-  color: var(--text);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
 }
 
 .nas-lb-table-wrap {
-  overflow-x: auto;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .nas-lb-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
 }
 
 .nas-lb-table thead tr {
-  background: var(--bg-secondary, #f9fafb);
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
 }
 
 .nas-lb-table th {
-  padding: 10px 14px;
+  padding: 10px 20px;
   text-align: left;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
-  font-size: 12px;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
+  letter-spacing: 0.5px;
 }
 
 .nas-lb-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
+  padding: 13px 20px;
+  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
 }
 
@@ -1497,21 +1496,21 @@
   border-bottom: none;
 }
 
-.nas-lb-table tbody tr:hover {
-  background: var(--bg-secondary, #f9fafb);
+.nas-lb-table tbody tr:hover td {
+  background: #fafafa;
 }
 
 .nas-lb-mesic {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
   white-space: nowrap;
-  color: var(--text-muted);
-  font-size: 12px;
-  width: 120px;
 }
 
 .nas-lb-url a {
-  color: var(--accent);
+  font-size: 13px;
+  color: #2563eb;
   text-decoration: none;
-  word-break: break-all;
 }
 
 .nas-lb-url a:hover {
@@ -1519,19 +1518,28 @@
 }
 
 .nas-lb-dr {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  min-width: 36px;
 }
 
 .nas-lb-empty {
   text-align: center;
   color: var(--text-muted);
-  padding: 40px 0;
+  font-size: 14px;
+  padding: 40px 20px !important;
 }
+
+.dr-green { background: #dcfce7; color: #16a34a; }
+.dr-blue  { background: #dbeafe; color: #2563eb; }
+.dr-amber { background: #fef9c3; color: #a16207; }
+.dr-red   { background: #fee2e2; color: #dc2626; }
+.dr-gray  { background: var(--bg-secondary); color: var(--text-muted); }
 
 /* ── Hledání nových webů ────────────────────────────────── */
 .hledani-page {

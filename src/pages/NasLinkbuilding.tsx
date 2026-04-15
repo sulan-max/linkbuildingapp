@@ -2,12 +2,12 @@ import { useState, useMemo } from 'react'
 import { CLIENTS } from '../config/clients'
 import { useLinkbuildingSheet } from '../hooks/useLinkbuildingSheet'
 
-function getDrColor(dr: number | null): string {
-  if (dr === null) return '#9ca3af'
-  if (dr >= 60) return '#16a34a'
-  if (dr >= 40) return '#0693e3'
-  if (dr >= 20) return '#d97706'
-  return '#dc2626'
+function getDrClass(dr: number | null): string {
+  if (dr === null) return 'dr-gray'
+  if (dr >= 60) return 'dr-green'
+  if (dr >= 40) return 'dr-blue'
+  if (dr >= 20) return 'dr-amber'
+  return 'dr-red'
 }
 
 // Parsuje "MM/YYYY" → číslo pro řazení (YYYYMM)
@@ -196,7 +196,7 @@ export function NasLinkbuildingPage() {
                     </td>
                     <td>
                       {row.drDa !== null ? (
-                        <span className="nas-lb-dr" style={{ background: getDrColor(row.drDa) }}>
+                        <span className={`nas-lb-dr ${getDrClass(row.drDa)}`}>
                           {row.drDa}
                         </span>
                       ) : '—'}
