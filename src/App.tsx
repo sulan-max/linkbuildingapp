@@ -6,6 +6,7 @@ import { AsistentPage } from './pages/Asistent'
 import { NastaveniPage } from './pages/Nastaveni'
 import { HledaniWebuPage } from './pages/HledaniWebu'
 import { NasLinkbuildingPage } from './pages/NasLinkbuilding'
+import { StatistikyPage } from './pages/Statistiky'
 import { LoginScreen } from './components/LoginScreen'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
@@ -227,7 +228,8 @@ function App() {
           {page === 'nastaveni' && <NastaveniPage />}
           {page === 'hledani' && <HledaniWebuPage />}
           {page === 'nas-linkbuilding' && <NasLinkbuildingPage />}
-          {page !== 'dashboard' && page !== 'portfolio' && page !== 'asistent' && page !== 'planovane' && page !== 'kontakty' && page !== 'nastaveni' && page !== 'hledani' && page !== 'nas-linkbuilding' && (
+          {page === 'statistiky' && <StatistikyPage />}
+          {page !== 'dashboard' && page !== 'portfolio' && page !== 'asistent' && page !== 'planovane' && page !== 'kontakty' && page !== 'nastaveni' && page !== 'hledani' && page !== 'nas-linkbuilding' && page !== 'statistiky' && (
             <PlaceholderContent page={page} />
           )}
         </main>
