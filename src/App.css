@@ -1413,34 +1413,6 @@
   gap: 16px;
 }
 
-.nas-lb-clients {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.nas-lb-client-btn {
-  padding: 6px 16px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  background: var(--bg);
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.nas-lb-client-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.nas-lb-client-btn.active {
-  background: #e3341b;
-  border-color: #e3341b;
-  color: #fff;
-}
 
 .nas-lb-heading {
   font-size: 22px;
@@ -1741,4 +1713,77 @@
 
 .btn-ghost:hover {
   color: var(--text);
+}
+
+/* ============================================================
+   CLIENT SELECTOR GRID
+   ============================================================ */
+.client-selector-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.client-selector-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 12px;
+}
+
+.client-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.client-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--sans);
+}
+
+.client-tile:hover:not(.active) {
+  border-color: #cbd5e1;
+  color: var(--text-heading);
+  background: var(--bg-secondary);
+}
+
+.client-tile.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.client-tile-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.client-tile.active .client-tile-dot {
+  background: var(--primary);
 }
