@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, type MouseEvent } from 'react'
 import { CLIENTS } from '../config/clients'
 import { useLinkbuildingSheet, type LinkRow } from '../hooks/useLinkbuildingSheet'
 import { getGeminiKey } from '../lib/settings'
@@ -196,7 +196,7 @@ function ColumnChart({
   const barW = Math.max(4, slotW * 0.6)
   const currentMonth = currentMonthLabel()
 
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+  function handleMouseMove(e: MouseEvent<SVGSVGElement>) {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * W - PAD.left
     const idx = Math.floor(x / slotW)
