@@ -171,6 +171,106 @@ function getDrClass(dr: number | null): string {
   return 'dr-red'
 }
 
+// ── Column chart SVG ──────────────────────────────────────────────
+
+function ColumnChart({
+  buckets,
+  rangeFilter,
+  onRangeChange,
+}: {
+  buckets: MonthBucket[]
+  rangeFilter: RangeFilter
+  onRangeChange: (r: RangeFilter) => void
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+  const filtered = filterMonthBuckets(buckets, rangeFilter)
+  const maxCount = filtered.length > 0 ? Math.max(...filtered.map(m => m.count)) : 1
+
+  const W = 300, H = 120
+  const PAD = { top: 10, right: 8, bottom: 26, left: 8 }
+  const chartW = W - PAD.left - PAD.right
+  const chartH = H - PAD.top - PAD.bottom
+  const n = filtered.length
+  const slotW = n > 0 ? chartW / n : 0
+  const barW = Math.max(4, slotW * 0.6)
+  const currentMonth = currentMonthLabel()
+
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * W - PAD.left
+    const idx = Math.floor(x / slotW)
+    setHoveredIdx(idx >= 0 && idx < n ? idx : null)
+  }
+
+  return (
+    <div>
+      <div className="stat-range-pills">
+        {(['3m', '6m', '1y', 'all'] as RangeFilter[]).map(r => (
+          <button
+            key={r}
+            className={`stat-range-pill${rangeFilter === r ? ' active' : ''}`}
+            onClick={() => onRangeChange(r)}
+          >
+            {r === '3m' ? '3M' : r === '6m' ? '6M' : r === '1y' ? '1R' : 'Vše'}
+          </button>
+        ))}
+      </div>
+      <div style={{ position: 'relative' }}>
+        <svg
+          width="100%"
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoveredIdx(null)}
+        >
+          {filtered.map((m, i) => {
+            const barH = maxCount > 0 ? (m.count / maxCount) * chartH : 0
+            const x = PAD.left + i * slotW + (slotW - barW) / 2
+            const y = PAD.top + chartH - barH
+            const isCurrent = m.label === currentMonth
+            const isHovered = hoveredIdx === i
+            return (
+              <g key={m.label}>
+                <rect
+                  x={x}
+                  y={y}
+                  width={barW}
+                  height={barH}
+                  rx={3}
+                  fill={isCurrent ? '#e3341b' : isHovered ? '#f87171' : '#fca5a5'}
+                />
+                <text
+                  x={PAD.left + i * slotW + slotW / 2}
+                  y={H - 6}
+                  textAnchor="middle"
+                  fontSize="8"
+                  fill="#94a3b8"
+                >
+                  {m.label}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+        {hoveredIdx !== null && filtered[hoveredIdx] && (
+          <div
+            className="stat-tooltip"
+            style={{
+              left: `${((PAD.left + hoveredIdx * slotW + slotW / 2) / W) * 100}%`,
+              top: 4,
+            }}
+          >
+            <div className="stat-tooltip-month">{filtered[hoveredIdx].label}</div>
+            <div className="stat-tooltip-val">{filtered[hoveredIdx].count} odkazů</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Donut SVG ─────────────────────────────────────────────────────
 
 const CIRC = 2 * Math.PI * 40 // ≈ 251.33
