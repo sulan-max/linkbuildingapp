@@ -360,6 +360,137 @@ function LineChart({ points }: { points: AvgDrMonth[] }) {
   )
 }
 
+// ── Dual line chart SVG ───────────────────────────────────────────
+
+function DualLineChart({
+  monthly,
+  cumulative,
+}: {
+  monthly: AvgDrMonth[]
+  cumulative: AvgDrMonth[]
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+  if (monthly.length === 0) return <p className="stat-empty-note">Nedostatek dat</p>
+
+  const W = 300, H = 100
+  const PAD = { top: 10, right: 10, bottom: 22, left: 10 }
+  const chartW = W - PAD.left - PAD.right
+  const chartH = H - PAD.top - PAD.bottom
+  const n = monthly.length
+
+  const allVals = [...monthly.map(p => p.avgDr), ...cumulative.map(p => p.avgDr)]
+  const minVal = Math.min(...allVals)
+  const maxVal = Math.max(...allVals)
+  const range = maxVal - minVal || 1
+
+  function coords(points: AvgDrMonth[]) {
+    return points.map((p, i) => ({
+      x: PAD.left + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW),
+      y: PAD.top + chartH - ((p.avgDr - minVal) / range) * chartH,
+    }))
+  }
+
+  const mCoords = coords(monthly)
+  const cCoords = coords(cumulative)
+  const mPoly = mCoords.map(c => `${c.x},${c.y}`).join(' ')
+  const cPoly = cCoords.map(c => `${c.x},${c.y}`).join(' ')
+
+  function handleMouseMove(e: MouseEvent<SVGSVGElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * W - PAD.left
+    const raw = n === 1 ? 0 : Math.round((x / chartW) * (n - 1))
+    setHoveredIdx(raw >= 0 && raw < n ? raw : null)
+  }
+
+  const hx = hoveredIdx !== null ? mCoords[hoveredIdx].x : null
+
+  return (
+    <div>
+      <div style={{ position: 'relative' }}>
+        <svg
+          width="100%"
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoveredIdx(null)}
+        >
+          {/* Cumulative avg — dashed gray */}
+          <polyline
+            points={cPoly}
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth="2"
+            strokeDasharray="4 3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Monthly avg — solid red */}
+          <polyline
+            points={mPoly}
+            fill="none"
+            stroke="#e3341b"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Cursor line */}
+          {hx !== null && (
+            <line
+              x1={hx} y1={PAD.top}
+              x2={hx} y2={PAD.top + chartH}
+              stroke="#cbd5e1"
+              strokeWidth="1"
+              strokeDasharray="3 2"
+            />
+          )}
+          {/* X labels */}
+          {monthly.map((p, i) => (
+            <text
+              key={p.label}
+              x={PAD.left + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW)}
+              y={H - 4}
+              textAnchor="middle"
+              fontSize="7"
+              fill="#94a3b8"
+            >
+              {p.label}
+            </text>
+          ))}
+        </svg>
+        {hoveredIdx !== null && hx !== null && (
+          <div
+            className="stat-tooltip"
+            style={{
+              left: `${(hx / W) * 100}%`,
+              top: 4,
+            }}
+          >
+            <div className="stat-tooltip-month">{monthly[hoveredIdx].label}</div>
+            <div className="stat-tooltip-val" style={{ color: '#fca5a5' }}>
+              Měs. DR: {monthly[hoveredIdx].avgDr}
+            </div>
+            <div className="stat-tooltip-val" style={{ color: '#cbd5e1' }}>
+              Kumul.: {cumulative[hoveredIdx].avgDr}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="stat-dual-legend">
+        <span className="stat-leg-item">
+          <span className="stat-leg-dot" style={{ background: '#e3341b' }} />
+          Měsíční průměr DR
+        </span>
+        <span className="stat-leg-item">
+          <span className="stat-leg-dot" style={{ background: '#94a3b8' }} />
+          Kumulativní průměr
+        </span>
+      </div>
+    </div>
+  )
+}
+
 // ── AI Analysis ───────────────────────────────────────────────────
 
 interface AiInsight {
