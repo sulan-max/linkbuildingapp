@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 const ALLOWED_DOMAIN = '@creaticom.cz'
 
 function isAllowedUser(user: User | null): boolean {
-  return !!user?.email?.endsWith(ALLOWED_DOMAIN)
+  return !!user?.email?.toLowerCase().endsWith(ALLOWED_DOMAIN.toLowerCase())
 }
 
 export function useAuth() {
@@ -14,7 +14,17 @@ export function useAuth() {
   const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(() => setLoading(false))
+    supabase.auth.getSession().then(({ data }) => {
+      const sessionUser = data.session?.user ?? null
+      if (sessionUser && !isAllowedUser(sessionUser)) {
+        supabase.auth.signOut()
+        setAuthError(`Přístup je povolen pouze pro účty s doménou ${ALLOWED_DOMAIN}.`)
+        setUser(null)
+      } else {
+        setUser(sessionUser)
+      }
+      setLoading(false)
+    })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const sessionUser = session?.user ?? null
