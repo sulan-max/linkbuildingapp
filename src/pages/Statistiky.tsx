@@ -139,6 +139,14 @@ function filterMonthBuckets(buckets: MonthBucket[], range: RangeFilter): MonthBu
   return buckets.slice(-n)
 }
 
+type DrRangeFilter = '6m' | '9m' | '1y' | '18m' | '2y' | 'all'
+
+function filterAvgDrMonths(months: AvgDrMonth[], range: DrRangeFilter): AvgDrMonth[] {
+  if (range === 'all') return months
+  const n = range === '6m' ? 6 : range === '9m' ? 9 : range === '1y' ? 12 : range === '18m' ? 18 : 24
+  return months.slice(-n)
+}
+
 function computeCumulativeAvgDr(rows: LinkRow[]): AvgDrMonth[] {
   const monthlyMap = new Map<string, number[]>()
   for (const r of rows) {
@@ -322,24 +330,31 @@ function DonutChart({ buckets, total }: { buckets: DrBucket[]; total: number }) 
 function DualLineChart({
   monthly,
   cumulative,
+  drRangeFilter,
+  onDrRangeChange,
 }: {
   monthly: AvgDrMonth[]
   cumulative: AvgDrMonth[]
+  drRangeFilter: DrRangeFilter
+  onDrRangeChange: (r: DrRangeFilter) => void
 }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
-  if (monthly.length === 0) return <p className="stat-empty-note">Nedostatek dat</p>
+  const filteredMonthly    = filterAvgDrMonths(monthly, drRangeFilter)
+  const filteredCumulative = filterAvgDrMonths(cumulative, drRangeFilter)
+
+  if (filteredMonthly.length === 0) return <p className="stat-empty-note">Nedostatek dat</p>
 
   const W = 800, H = 200
   const PAD = { top: 12, right: 12, bottom: 30, left: 12 }
   const chartW = W - PAD.left - PAD.right
   const chartH = H - PAD.top - PAD.bottom
-  const n = monthly.length
+  const n = filteredMonthly.length
 
-  const allVals = [...monthly.map(p => p.avgDr), ...cumulative.map(p => p.avgDr)]
+  const allVals = [...filteredMonthly.map(p => p.avgDr), ...filteredCumulative.map(p => p.avgDr)]
   const minVal = Math.min(...allVals)
   const maxVal = Math.max(...allVals)
-  const range = maxVal - minVal || 1
+  const valRange = maxVal - minVal || 1
 
   // show at most ~10 X-axis labels to prevent overlap
   const labelStep = Math.max(1, Math.ceil(n / 10))
@@ -347,12 +362,12 @@ function DualLineChart({
   function coords(points: AvgDrMonth[]) {
     return points.map((p, i) => ({
       x: PAD.left + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW),
-      y: PAD.top + chartH - ((p.avgDr - minVal) / range) * chartH,
+      y: PAD.top + chartH - ((p.avgDr - minVal) / valRange) * chartH,
     }))
   }
 
-  const mCoords = coords(monthly)
-  const cCoords = coords(cumulative)
+  const mCoords = coords(filteredMonthly)
+  const cCoords = coords(filteredCumulative)
   const mPoly = mCoords.map(c => `${c.x},${c.y}`).join(' ')
   const cPoly = cCoords.map(c => `${c.x},${c.y}`).join(' ')
 
@@ -364,9 +379,22 @@ function DualLineChart({
   }
 
   const hx = hoveredIdx !== null ? mCoords[hoveredIdx].x : null
+  // clamp tooltip so it doesn't overflow on edges
+  const tooltipLeft = hx !== null ? `${Math.min(Math.max((hx / W) * 100, 5), 92)}%` : '0'
 
   return (
     <div>
+      <div className="stat-range-pills">
+        {(['6m', '9m', '1y', '18m', '2y', 'all'] as DrRangeFilter[]).map(r => (
+          <button
+            key={r}
+            className={`stat-range-pill${drRangeFilter === r ? ' active' : ''}`}
+            onClick={() => { onDrRangeChange(r); setHoveredIdx(null) }}
+          >
+            {r === '6m' ? '6M' : r === '9m' ? '9M' : r === '1y' ? '1R' : r === '18m' ? '18M' : r === '2y' ? '2R' : 'Vše'}
+          </button>
+        ))}
+      </div>
       <div style={{ position: 'relative' }}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -404,7 +432,7 @@ function DualLineChart({
             />
           )}
           {/* X labels — skip to prevent overlap */}
-          {monthly.map((p, i) => (
+          {filteredMonthly.map((p, i) => (
             (i % labelStep === 0 || i === n - 1) && (
               <text
                 key={p.label}
@@ -419,20 +447,17 @@ function DualLineChart({
             )
           ))}
         </svg>
-        {hoveredIdx !== null && hx !== null && monthly[hoveredIdx] && cumulative[hoveredIdx] && (
+        {hoveredIdx !== null && hx !== null && filteredMonthly[hoveredIdx] && filteredCumulative[hoveredIdx] && (
           <div
             className="stat-tooltip"
-            style={{
-              left: `${(hx / W) * 100}%`,
-              top: 4,
-            }}
+            style={{ left: tooltipLeft, top: 4 }}
           >
-            <div className="stat-tooltip-month">{monthly[hoveredIdx].label}</div>
+            <div className="stat-tooltip-month">{filteredMonthly[hoveredIdx].label}</div>
             <div className="stat-tooltip-val" style={{ color: '#fca5a5' }}>
-              Měs. DR: {monthly[hoveredIdx].avgDr}
+              Měs. DR: {filteredMonthly[hoveredIdx].avgDr}
             </div>
             <div className="stat-tooltip-val" style={{ color: '#cbd5e1' }}>
-              Kumul.: {cumulative[hoveredIdx].avgDr}
+              Kumul.: {filteredCumulative[hoveredIdx].avgDr}
             </div>
           </div>
         )}
@@ -541,6 +566,7 @@ function scoreColor(s: number): string {
 export function StatistikyPage() {
   const [clientIdx, setClientIdx] = useState(0)
   const [rangeFilter, setRangeFilter] = useState<RangeFilter>('3m')
+  const [drRangeFilter, setDrRangeFilter] = useState<DrRangeFilter>('all')
   const [aiResult, setAiResult] = useState<AiResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
@@ -643,22 +669,6 @@ export function StatistikyPage() {
               <div className="stat-karta-val" style={{ color: '#16a34a' }}>{stats.bestDr ?? '—'}</div>
               <div className="stat-karta-sub">{stats.bestUrl || '—'}</div>
             </div>
-          </div>
-
-          {/* Column chart — full width */}
-          <div className="stat-chart-card">
-            <div className="stat-chart-title">Počet odkazů po měsících</div>
-            <ColumnChart
-              buckets={months}
-              rangeFilter={rangeFilter}
-              onRangeChange={setRangeFilter}
-            />
-          </div>
-
-          {/* DR line chart — full width */}
-          <div className="stat-chart-card">
-            <div className="stat-chart-title">Průměrný DR v čase</div>
-            <DualLineChart monthly={avgDrData} cumulative={cumulDrData} />
           </div>
 
           {/* Donut + top5 row */}
@@ -785,6 +795,27 @@ export function StatistikyPage() {
                 Klikni na "Spustit analýzu" pro AI hodnocení profilu odkazů tohoto klienta.
               </p>
             )}
+          </div>
+
+          {/* Column chart — full width, bottom */}
+          <div className="stat-chart-card">
+            <div className="stat-chart-title">Počet odkazů po měsících</div>
+            <ColumnChart
+              buckets={months}
+              rangeFilter={rangeFilter}
+              onRangeChange={setRangeFilter}
+            />
+          </div>
+
+          {/* DR line chart — full width, bottom */}
+          <div className="stat-chart-card">
+            <div className="stat-chart-title">Průměrný DR v čase</div>
+            <DualLineChart
+              monthly={avgDrData}
+              cumulative={cumulDrData}
+              drRangeFilter={drRangeFilter}
+              onDrRangeChange={setDrRangeFilter}
+            />
           </div>
         </>
       )}
