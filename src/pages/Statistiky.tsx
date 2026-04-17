@@ -319,47 +319,6 @@ function DonutChart({ buckets, total }: { buckets: DrBucket[]; total: number }) 
   )
 }
 
-// ── Line chart SVG ────────────────────────────────────────────────
-
-function LineChart({ points }: { points: AvgDrMonth[] }) {
-  if (points.length === 0) return <p className="stat-empty-note">Nedostatek dat</p>
-
-  const W = 300, H = 80
-  const minVal = Math.min(...points.map(p => p.avgDr))
-  const maxVal = Math.max(...points.map(p => p.avgDr))
-  const range = maxVal - minVal || 1
-
-  const coords = points.map((p, i) => {
-    const x = points.length === 1 ? W / 2 : (i / (points.length - 1)) * W
-    const y = H - 10 - ((p.avgDr - minVal) / range) * (H - 20)
-    return { x, y }
-  })
-
-  const polyline = coords.map(c => `${c.x},${c.y}`).join(' ')
-  const areaPath = `M${coords[0].x},${coords[0].y} ${coords.slice(1).map(c => `L${c.x},${c.y}`).join(' ')} L${coords[coords.length - 1].x},${H} L${coords[0].x},${H} Z`
-
-  return (
-    <div>
-      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="lineGr" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#e3341b" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#e3341b" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={areaPath} fill="url(#lineGr)" />
-        <polyline points={polyline} fill="none" stroke="#e3341b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx={coords[coords.length - 1].x} cy={coords[coords.length - 1].y} r="4" fill="#e3341b" />
-      </svg>
-      <div className="stat-line-labels">
-        {points.map(p => (
-          <span key={p.label} className="stat-line-lbl">{p.label}</span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // ── Dual line chart SVG ───────────────────────────────────────────
 
 function DualLineChart({
@@ -580,6 +539,7 @@ function scoreColor(s: number): string {
 
 export function StatistikyPage() {
   const [clientIdx, setClientIdx] = useState(0)
+  const [rangeFilter, setRangeFilter] = useState<RangeFilter>('3m')
   const [aiResult, setAiResult] = useState<AiResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
@@ -587,13 +547,13 @@ export function StatistikyPage() {
   const client = CLIENTS[clientIdx]
   const { rows, loading, error } = useLinkbuildingSheet(client)
 
-  const stats     = useMemo(() => computeStats(rows), [rows])
-  const months    = useMemo(() => computeMonthBuckets(rows), [rows])
-  const drBuckets = useMemo(() => computeDrBuckets(rows), [rows])
-  const avgDrData = useMemo(() => computeAvgDrByMonth(rows), [rows])
-  const top5      = useMemo(() => topFiveByDr(rows), [rows])
+  const stats       = useMemo(() => computeStats(rows), [rows])
+  const months      = useMemo(() => computeMonthBuckets(rows), [rows])
+  const drBuckets   = useMemo(() => computeDrBuckets(rows), [rows])
+  const avgDrData   = useMemo(() => computeAvgDrByMonth(rows), [rows])
+  const cumulDrData = useMemo(() => computeCumulativeAvgDr(rows), [rows])
+  const top5        = useMemo(() => topFiveByDr(rows), [rows])
 
-  const maxCount = months.length > 0 ? Math.max(...months.map(m => m.count)) : 1
   const currentMonth = currentMonthLabel()
 
   const handleAiAnalyze = useCallback(async () => {
@@ -688,29 +648,11 @@ export function StatistikyPage() {
           <div className="stat-charts-row1">
             <div className="stat-chart-card">
               <div className="stat-chart-title">Počet odkazů po měsících</div>
-              <div className="stat-bar-chart">
-                {months.map(m => {
-                  const pct = maxCount > 0 ? (m.count / maxCount) * 100 : 0
-                  const isCurrent = m.label === currentMonth
-                  return (
-                    <div key={m.label} className="stat-bar-row">
-                      <span className="stat-bar-month">{m.label}</span>
-                      <div className="stat-bar-track">
-                        <div
-                          className="stat-bar-fill"
-                          style={{
-                            width: `${pct}%`,
-                            background: isCurrent ? '#e3341b' : '#fca5a5',
-                          }}
-                        />
-                      </div>
-                      <span className="stat-bar-count" style={{ color: isCurrent ? '#e3341b' : '#94a3b8', fontWeight: isCurrent ? 700 : 400 }}>
-                        {m.count}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
+              <ColumnChart
+                buckets={months}
+                rangeFilter={rangeFilter}
+                onRangeChange={setRangeFilter}
+              />
             </div>
 
             <div className="stat-chart-card">
@@ -723,7 +665,7 @@ export function StatistikyPage() {
           <div className="stat-charts-row2">
             <div className="stat-chart-card">
               <div className="stat-chart-title">Průměrný DR v čase</div>
-              <LineChart points={avgDrData} />
+              <DualLineChart monthly={avgDrData} cumulative={cumulDrData} />
             </div>
 
             <div className="stat-chart-card">
