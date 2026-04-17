@@ -131,6 +131,36 @@ function topFiveByDr(rows: LinkRow[]): LinkRow[] {
     .slice(0, 5)
 }
 
+type RangeFilter = '3m' | '6m' | '1y' | 'all'
+
+function filterMonthBuckets(buckets: MonthBucket[], range: RangeFilter): MonthBucket[] {
+  if (range === 'all') return buckets
+  const n = range === '3m' ? 3 : range === '6m' ? 6 : 12
+  return buckets.slice(-n)
+}
+
+function computeCumulativeAvgDr(rows: LinkRow[]): AvgDrMonth[] {
+  const monthlyMap = new Map<string, number[]>()
+  for (const r of rows) {
+    if (!r.mesicRok || r.drDa === null) continue
+    const arr = monthlyMap.get(r.mesicRok) ?? []
+    arr.push(r.drDa)
+    monthlyMap.set(r.mesicRok, arr)
+  }
+  const sorted = [...monthlyMap.entries()]
+    .sort((a, b) => parseSortKey(a[0]) - parseSortKey(b[0]))
+  const result: AvgDrMonth[] = []
+  let allVals: number[] = []
+  for (const [label, vals] of sorted) {
+    allVals = allVals.concat(vals)
+    result.push({
+      label,
+      avgDr: Math.round(allVals.reduce((s, v) => s + v, 0) / allVals.length),
+    })
+  }
+  return result
+}
+
 // ── DR badge class ────────────────────────────────────────────────
 
 function getDrClass(dr: number | null): string {
