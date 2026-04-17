@@ -139,7 +139,7 @@ function PlaceholderContent({ page }: { page: Page }) {
 
 function App() {
   const [page, setPage] = useState<Page>('dashboard')
-  const { user, loading, signInWithGoogle, signOut } = useAuth()
+  const { user, loading, signInWithGoogle, signOut, authError } = useAuth()
 
   if (loading) {
     return (
@@ -150,7 +150,7 @@ function App() {
   }
 
   if (!user) {
-    return <LoginScreen onLogin={signInWithGoogle} />
+    return <LoginScreen onLogin={signInWithGoogle} errorMessage={authError} />
   }
 
   const avatarLetter = user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? '?'
