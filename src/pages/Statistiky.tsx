@@ -187,13 +187,13 @@ function ColumnChart({
   const filtered = filterMonthBuckets(buckets, rangeFilter)
   const maxCount = filtered.length > 0 ? Math.max(...filtered.map(m => m.count)) : 1
 
-  const W = 300, H = 120
-  const PAD = { top: 10, right: 8, bottom: 26, left: 8 }
+  const W = 800, H = 220
+  const PAD = { top: 12, right: 12, bottom: 32, left: 12 }
   const chartW = W - PAD.left - PAD.right
   const chartH = H - PAD.top - PAD.bottom
   const n = filtered.length
   const slotW = n > 0 ? chartW / n : 0
-  const barW = Math.max(4, slotW * 0.6)
+  const barW = Math.max(8, slotW * 0.55)
   const currentMonth = currentMonthLabel()
 
   function handleMouseMove(e: MouseEvent<SVGSVGElement>) {
@@ -218,10 +218,8 @@ function ColumnChart({
       </div>
       <div style={{ position: 'relative' }}>
         <svg
-          width="100%"
-          height={H}
           viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredIdx(null)}
         >
@@ -238,14 +236,14 @@ function ColumnChart({
                   y={y}
                   width={barW}
                   height={barH}
-                  rx={3}
+                  rx={4}
                   fill={isCurrent ? '#e3341b' : isHovered ? '#f87171' : '#fca5a5'}
                 />
                 <text
                   x={PAD.left + i * slotW + slotW / 2}
-                  y={H - 6}
+                  y={H - 8}
                   textAnchor="middle"
-                  fontSize="8"
+                  fontSize="12"
                   fill="#94a3b8"
                 >
                   {m.label}
@@ -332,8 +330,8 @@ function DualLineChart({
 
   if (monthly.length === 0) return <p className="stat-empty-note">Nedostatek dat</p>
 
-  const W = 300, H = 100
-  const PAD = { top: 10, right: 10, bottom: 22, left: 10 }
+  const W = 800, H = 200
+  const PAD = { top: 12, right: 12, bottom: 30, left: 12 }
   const chartW = W - PAD.left - PAD.right
   const chartH = H - PAD.top - PAD.bottom
   const n = monthly.length
@@ -342,6 +340,9 @@ function DualLineChart({
   const minVal = Math.min(...allVals)
   const maxVal = Math.max(...allVals)
   const range = maxVal - minVal || 1
+
+  // show at most ~10 X-axis labels to prevent overlap
+  const labelStep = Math.max(1, Math.ceil(n / 10))
 
   function coords(points: AvgDrMonth[]) {
     return points.map((p, i) => ({
@@ -368,10 +369,8 @@ function DualLineChart({
     <div>
       <div style={{ position: 'relative' }}>
         <svg
-          width="100%"
-          height={H}
           viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredIdx(null)}
         >
@@ -381,7 +380,7 @@ function DualLineChart({
             fill="none"
             stroke="#94a3b8"
             strokeWidth="2"
-            strokeDasharray="4 3"
+            strokeDasharray="6 4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -404,18 +403,20 @@ function DualLineChart({
               strokeDasharray="3 2"
             />
           )}
-          {/* X labels */}
+          {/* X labels — skip to prevent overlap */}
           {monthly.map((p, i) => (
-            <text
-              key={p.label}
-              x={PAD.left + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW)}
-              y={H - 4}
-              textAnchor="middle"
-              fontSize="7"
-              fill="#94a3b8"
-            >
-              {p.label}
-            </text>
+            (i % labelStep === 0 || i === n - 1) && (
+              <text
+                key={p.label}
+                x={PAD.left + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW)}
+                y={H - 6}
+                textAnchor="middle"
+                fontSize="11"
+                fill="#94a3b8"
+              >
+                {p.label}
+              </text>
+            )
           ))}
         </svg>
         {hoveredIdx !== null && hx !== null && monthly[hoveredIdx] && cumulative[hoveredIdx] && (
@@ -644,28 +645,27 @@ export function StatistikyPage() {
             </div>
           </div>
 
-          {/* Charts row 1: bar + donut */}
-          <div className="stat-charts-row1">
-            <div className="stat-chart-card">
-              <div className="stat-chart-title">Počet odkazů po měsících</div>
-              <ColumnChart
-                buckets={months}
-                rangeFilter={rangeFilter}
-                onRangeChange={setRangeFilter}
-              />
-            </div>
+          {/* Column chart — full width */}
+          <div className="stat-chart-card">
+            <div className="stat-chart-title">Počet odkazů po měsících</div>
+            <ColumnChart
+              buckets={months}
+              rangeFilter={rangeFilter}
+              onRangeChange={setRangeFilter}
+            />
+          </div>
 
+          {/* DR line chart — full width */}
+          <div className="stat-chart-card">
+            <div className="stat-chart-title">Průměrný DR v čase</div>
+            <DualLineChart monthly={avgDrData} cumulative={cumulDrData} />
+          </div>
+
+          {/* Donut + top5 row */}
+          <div className="stat-charts-row1">
             <div className="stat-chart-card">
               <div className="stat-chart-title">DR kvalita odkazů</div>
               <DonutChart buckets={drBuckets} total={rows.filter(r => r.drDa !== null).length} />
-            </div>
-          </div>
-
-          {/* Charts row 2: line + top5 */}
-          <div className="stat-charts-row2">
-            <div className="stat-chart-card">
-              <div className="stat-chart-title">Průměrný DR v čase</div>
-              <DualLineChart monthly={avgDrData} cumulative={cumulDrData} />
             </div>
 
             <div className="stat-chart-card">
