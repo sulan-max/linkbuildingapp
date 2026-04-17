@@ -14,17 +14,7 @@ export function useAuth() {
   const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const sessionUser = data.session?.user ?? null
-      if (sessionUser && !isAllowedUser(sessionUser)) {
-        supabase.auth.signOut()
-        setAuthError(`Přístup je povolen pouze pro účty s doménou ${ALLOWED_DOMAIN}.`)
-        setUser(null)
-      } else {
-        setUser(sessionUser)
-      }
-      setLoading(false)
-    })
+    supabase.auth.getSession().then(() => setLoading(false))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const sessionUser = session?.user ?? null
@@ -36,6 +26,7 @@ export function useAuth() {
         if (sessionUser) setAuthError(null)
         setUser(sessionUser)
       }
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -49,7 +40,10 @@ export function useAuth() {
     })
   }
 
-  const signOut = () => supabase.auth.signOut()
+  const signOut = () => {
+    setAuthError(null)
+    return supabase.auth.signOut()
+  }
 
   return { user, loading, signInWithGoogle, signOut, authError }
 }
