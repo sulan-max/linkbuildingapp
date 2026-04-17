@@ -418,7 +418,7 @@ function DualLineChart({
             </text>
           ))}
         </svg>
-        {hoveredIdx !== null && hx !== null && (
+        {hoveredIdx !== null && hx !== null && monthly[hoveredIdx] && cumulative[hoveredIdx] && (
           <div
             className="stat-tooltip"
             style={{
