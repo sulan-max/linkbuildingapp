@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactElement } from 'react'
 import { PortfolioPage } from './pages/Portfolio'
 import { KontaktyPage } from './pages/Kontakty'
 import { PlanovaneLinkyPage } from './pages/PlanovaneLinky'
@@ -26,7 +26,7 @@ const PAGE_TITLES: Record<Page, string> = {
 }
 
 // SVG ikony (Heroicons stroke, 16×16 viewbox na 24×24)
-const Icons: Record<string, JSX.Element> = {
+const Icons: Record<string, ReactElement> = {
   dashboard: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>

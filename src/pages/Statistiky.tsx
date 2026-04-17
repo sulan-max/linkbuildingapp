@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, type MouseEvent } from 'react'
+import { useState, useMemo, useCallback, type MouseEvent, type ReactElement } from 'react'
 import { CLIENTS } from '../config/clients'
 import { useLinkbuildingSheet, type LinkRow } from '../hooks/useLinkbuildingSheet'
 import { getGeminiKey } from '../lib/settings'
@@ -536,7 +536,7 @@ async function callGeminiStats(prompt: string, key: string): Promise<AiResult> {
   return JSON.parse(text) as AiResult
 }
 
-const INSIGHT_ICON: Record<string, JSX.Element> = {
+const INSIGHT_ICON: Record<string, ReactElement> = {
   good: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12"/>

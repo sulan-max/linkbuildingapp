@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type ReactElement } from 'react'
 import { useBacklinkAnalysis, type AnalyzaResult } from '../hooks/useBacklinkAnalysis'
 
 interface Props {
@@ -32,7 +32,7 @@ const ANALYZA_CARDS: { key: keyof AnalyzaResult['analyza']; label: string; icon:
   { key: 'rizika',      label: 'Rizika',              icon: 'warning' },
 ]
 
-const CARD_ICONS: Record<string, JSX.Element> = {
+const CARD_ICONS: Record<string, ReactElement> = {
   building: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 22v-4h6v4"/>

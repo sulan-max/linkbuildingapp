@@ -50,12 +50,6 @@ export function NasLinkbuildingPage() {
   const client = CLIENTS[clientIdx] ?? null
   const { rows, loading, error } = useLinkbuildingSheet(client)
 
-  // Unikátní měsíce chronologicky sestupně
-  const mesice = useMemo(() => {
-    const unique = [...new Set(rows.map(r => r.mesicRok).filter(Boolean))]
-    return unique.sort((a, b) => parseSortKey(b) - parseSortKey(a))
-  }, [rows])
-
   const filtered = useMemo(() => {
     const min = drMin !== '' ? Number(drMin) : null
     const now = currentSortKey()
