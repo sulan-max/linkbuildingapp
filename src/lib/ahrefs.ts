@@ -1,5 +1,5 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
-const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+const SUPABASE_URL = 'https://njtjpbmudwhadozfpkll.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qdGpwYm11ZHdoYWRvemZwa2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NzYwMjEsImV4cCI6MjA5MTE1MjAyMX0.5XUVSVKTP28gM-tEfslp-EYWtCpBMtP51ExNd3YVtM4'
 const PROXY_URL = `${SUPABASE_URL}/functions/v1/ahrefs-proxy`
 
 // ── Internal helpers ────────────────────────────────────────────
