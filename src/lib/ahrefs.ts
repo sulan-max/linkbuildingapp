@@ -105,20 +105,26 @@ export async function getOrganicCompetitors(
   ahrefsKey: string
 ): Promise<CompetitorResult[]> {
   const cleanDomain = extractDomain(domain)
-  const data = await proxyGet('site-explorer/organic-competitors', {
-    target: cleanDomain,
-    country,
-    date: recentDate(),
-    select: 'competitor_domain,domain_rating,traffic,keywords_common',
-    mode: 'subdomains',
-    limit: '20',
-    order_by: 'traffic:desc',
-  }, ahrefsKey) as { competitors?: Array<{
+  let data: { competitors?: Array<{
     competitor_domain: string
     domain_rating: number | null
     traffic: number | null
     keywords_common: number
   }> }
+  try {
+    data = await proxyGet('site-explorer/organic-competitors', {
+      target: cleanDomain,
+      country,
+      date: recentDate(),
+      select: 'competitor_domain,domain_rating,traffic,keywords_common',
+      mode: 'subdomains',
+      limit: '20',
+      order_by: 'traffic:desc',
+    }, ahrefsKey) as typeof data
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('Not found')) return []
+    throw err
+  }
 
   return (data.competitors ?? []).map(c => ({
     domain: c.competitor_domain,
