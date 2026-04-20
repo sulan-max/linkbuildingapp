@@ -1,15 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { getGeminiKey, getAhrefsKey, getCountry, saveSettings } from '../lib/settings'
 
-const SUPABASE_URL = 'https://njtjpbmudwhadozfpkll.supabase.co'
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qdGpwYm11ZHdoYWRvemZwa2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NzYwMjEsImV4cCI6MjA5MTE1MjAyMX0.5XUVSVKTP28gM-tEfslp-EYWtCpBMtP51ExNd3YVtM4'
-
 async function callProxy(endpoint: string, method: string, params: Record<string, string>, key: string) {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/ahrefs-proxy`, {
+  const res = await fetch('/api/ahrefs-proxy', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ endpoint, method, params, ahrefsKey: key }),
-    signal: AbortSignal.timeout(15000),
   })
   const data = await res.json() as Record<string, unknown>
   return { ok: res.ok, status: res.status, data }

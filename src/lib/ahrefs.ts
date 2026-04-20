@@ -1,6 +1,4 @@
-const SUPABASE_URL = 'https://njtjpbmudwhadozfpkll.supabase.co'
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qdGpwYm11ZHdoYWRvemZwa2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NzYwMjEsImV4cCI6MjA5MTE1MjAyMX0.5XUVSVKTP28gM-tEfslp-EYWtCpBMtP51ExNd3YVtM4'
-const PROXY_URL = `${SUPABASE_URL}/functions/v1/ahrefs-proxy`
+const PROXY_URL = '/api/ahrefs-proxy'
 
 // ── Internal helpers ────────────────────────────────────────────
 
@@ -24,12 +22,8 @@ async function proxyGet(
 ): Promise<unknown> {
 const res = await fetch(PROXY_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ endpoint, method: 'GET', params, ahrefsKey }),
-    signal: AbortSignal.timeout(55000),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(extractErrorMessage(data, res.status))
@@ -43,12 +37,8 @@ async function proxyPost(
 ): Promise<unknown> {
   const res = await fetch(PROXY_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ endpoint, method: 'POST', body, ahrefsKey }),
-    signal: AbortSignal.timeout(55000),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(extractErrorMessage(data, res.status))
