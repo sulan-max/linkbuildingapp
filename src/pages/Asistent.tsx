@@ -7,7 +7,7 @@ import type { WebEntry } from '../types/linkbuilding'
 function getGeminiUrl(): string {
   const key = getGeminiKey()
   if (!key) throw new Error('Gemini API klíč není nastaven. Přejděte do Nastavení a zadejte klíč.')
-  return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
+  return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${key}`
 }
 
 export interface ScoredEntry extends WebEntry {
