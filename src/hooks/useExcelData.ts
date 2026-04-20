@@ -1,6 +1,41 @@
 import { useState, useEffect } from 'react'
-import * as XLSX from 'xlsx'
 import type { WebEntry } from '../types/linkbuilding'
+
+const SHEET_ID = '1KLrwQ2Q6u-DxWP9Sn3ff1UivDTBf9xSyb-JJaMIjNL8'
+const SHEET_NAME = 'Databáze LB'
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`
+
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = []
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue
+    const row: string[] = []
+    let inQuote = false
+    let current = ''
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      if (ch === '"') {
+        if (inQuote && line[i + 1] === '"') { current += '"'; i++ }
+        else inQuote = !inQuote
+      } else if (ch === ',' && !inQuote) {
+        row.push(current); current = ''
+      } else {
+        current += ch
+      }
+    }
+    row.push(current)
+    rows.push(row)
+  }
+  return rows
+}
+
+function parseBool(val: string): boolean | null {
+  if (!val) return null
+  const v = val.trim().toUpperCase()
+  if (v === 'TRUE' || v === '1' || v === 'ANO') return true
+  if (v === 'FALSE' || v === '0' || v === 'NE') return false
+  return null
+}
 
 export function useExcelData() {
   const [data, setData] = useState<WebEntry[]>([])
@@ -8,40 +43,36 @@ export function useExcelData() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/Odkazy CreatiCom.xlsx')
+    fetch(CSV_URL)
       .then(res => {
-        if (!res.ok) throw new Error('Soubor Odkazy CreatiCom.xlsx nebyl nalezen v /public')
-        return res.arrayBuffer()
+        if (!res.ok) throw new Error('Nepodařilo se načíst Google Sheet — zkontroluj sdílení (musí být veřejný)')
+        return res.text()
       })
-      .then(buffer => {
-        const wb = XLSX.read(buffer, { type: 'array' })
-        const ws = wb.Sheets['Databáze LB']
-        const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1 })
-
-        const entries: WebEntry[] = (rows as unknown[][])
+      .then(text => {
+        const rows = parseCSV(text)
+        const entries: WebEntry[] = rows
           .slice(1)
-          .filter(r => r[0])
+          .filter(r => r[0]?.trim())
           .map(r => ({
-            url: String(r[0] || '').trim().replace(/\/$/, ''),
-            dr: typeof r[1] === 'number' ? Math.round(r[1]) : null,
-            portfolio: String(r[2] || ''),
-            kategorie: String(r[3] || ''),
-            ai: String(r[4] || ''),
-            cena: r[5] != null ? String(r[5]) : '',
-            dobaNasazeni: String(r[6] || ''),
-            vymenaKoup: String(r[7] || ''),
-            kontakt: String(r[8] || ''),
-            prClanek: r[9] === true || r[9] === 1 ? true : r[9] === false || r[9] === 0 ? false : null,
-            kdeBylPouzit: String(r[10] || ''),
-            kdeMuzeme: String(r[11] || ''),
-            kdeNepouzivat: String(r[12] || ''),
+            url: r[0].trim().replace(/\/$/, ''),
+            dr: r[1]?.trim() ? Math.round(Number(r[1])) || null : null,
+            portfolio: r[2] ?? '',
+            kategorie: r[3] ?? '',
+            ai: r[4] ?? '',
+            cena: r[5] ?? '',
+            dobaNasazeni: r[6] ?? '',
+            vymenaKoup: r[7] ?? '',
+            kontakt: r[8] ?? '',
+            prClanek: parseBool(r[9] ?? ''),
+            kdeBylPouzit: r[10] ?? '',
+            kdeMuzeme: r[11] ?? '',
+            kdeNepouzivat: r[12] ?? '',
           }))
-
         setData(entries)
         setLoading(false)
       })
       .catch(err => {
-        setError(String(err.message))
+        setError(err instanceof Error ? err.message : 'Chyba při načítání Google Sheets')
         setLoading(false)
       })
   }, [])
