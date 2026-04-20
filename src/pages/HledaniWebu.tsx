@@ -3,10 +3,7 @@ import { supabase } from '../lib/supabase'
 import { getGeminiKey, getAhrefsKey, getCountry } from '../lib/settings'
 import {
   getOrganicCompetitors,
-  getSerpDomains,
-  batchDomainMetrics,
   isBlacklisted,
-  passesQualityFilter,
   type BatchMetrics,
 } from '../lib/ahrefs'
 import { analyzeCustomer, scoreOpportunities } from '../lib/gemini-discovery'
@@ -39,18 +36,14 @@ type Step =
   | 'fetching-content'
   | 'analyzing-customer'
   | 'discovering-competitors'
-  | 'discovering-serp'
-  | 'batch-metrics'
   | 'scoring'
   | 'done'
 
 const STEP_LABELS: Record<Step, string> = {
   'idle': '',
   'fetching-content': 'Stahuji obsah webu zákazníka...',
-  'analyzing-customer': 'AI analyzuje obor zákazníka a hledá klíčová slova...',
+  'analyzing-customer': 'AI analyzuje obor zákazníka...',
   'discovering-competitors': 'Hledám konkurenční weby v Ahrefs...',
-  'discovering-serp': 'Procházím SERP výsledky pro klíčová slova...',
-  'batch-metrics': 'Načítám metriky pro nalezené weby...',
   'scoring': 'AI hodnotí příležitosti pro linkbuilding...',
   'done': '',
 }
@@ -177,14 +170,28 @@ function OpportunityCard({ opp, onSave, saved }: OpportunityCardProps) {
 
 // ── Main page ───────────────────────────────────────────────────
 
+const SESSION_KEY = 'hledani_last'
+
+function saveSession(url: string, opps: Opportunity[], prof: CustomerProfile, st: { discovered: number; afterFilter: number }) {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ url, opps, prof, st })) } catch { /* ignore */ }
+}
+
+function loadSession(): { url: string; opps: Opportunity[]; prof: CustomerProfile; st: { discovered: number; afterFilter: number } } | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
 export function HledaniWebuPage() {
-  const [customerUrl, setCustomerUrl] = useState('')
-  const [step, setStep] = useState<Step>('idle')
+  const saved = loadSession()
+  const [customerUrl, setCustomerUrl] = useState(saved?.url ?? '')
+  const [step, setStep] = useState<Step>(saved ? 'done' : 'idle')
   const [error, setError] = useState<string | null>(null)
-  const [profile, setProfile] = useState<CustomerProfile | null>(null)
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
+  const [profile, setProfile] = useState<CustomerProfile | null>(saved?.prof ?? null)
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(saved?.opps ?? [])
   const [savedDomains, setSavedDomains] = useState<Set<string>>(new Set())
-  const [stats, setStats] = useState<{ discovered: number; afterFilter: number } | null>(null)
+  const [stats, setStats] = useState<{ discovered: number; afterFilter: number } | null>(saved?.st ?? null)
 
   const geminiKey = getGeminiKey()
   const ahrefsKey = getAhrefsKey()
@@ -209,55 +216,74 @@ export function HledaniWebuPage() {
       const customerProfile = await analyzeCustomer(customerUrl.trim(), content, geminiKey)
       setProfile(customerProfile)
 
-      // Step 3: Ahrefs — find competing domains
+      // Step 3: Ahrefs — find competing domains + competitors of top competitors
       setStep('discovering-competitors')
       const customerDomain = customerUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
-      let allDomains: string[] = []
 
+      let firstLevel: Awaited<ReturnType<typeof getOrganicCompetitors>> = []
       try {
-        const competitors = await getOrganicCompetitors(customerDomain, country, ahrefsKey)
-        allDomains.push(...competitors.map(c => c.domain))
-      } catch {
-        // Domain might not be in Ahrefs yet — continue with SERP discovery
+        firstLevel = await getOrganicCompetitors(customerDomain, country, ahrefsKey)
+      } catch (err) {
+        throw new Error(`Ahrefs: ${err instanceof Error ? err.message : String(err)}`)
       }
 
-      // Step 4: Ahrefs — SERP discovery for each keyword
-      setStep('discovering-serp')
-      const keywordsToCheck = customerProfile.czechKeywords.slice(0, 6)
-      for (const kw of keywordsToCheck) {
-        try {
-          const serpDomains = await getSerpDomains(kw, country, ahrefsKey)
-          allDomains.push(...serpDomains.map(s => s.domain))
-        } catch {
-          // Continue if one keyword fails
+      // Get competitors of top 6 competitors in parallel (second level)
+      const topForExpansion = firstLevel.slice(0, 6).map(c => c.domain)
+      const secondLevelResults = await Promise.all(
+        topForExpansion.map(domain =>
+          getOrganicCompetitors(domain, country, ahrefsKey).catch(() => [])
+        )
+      )
+      const allCompetitors = [...firstLevel, ...secondLevelResults.flat()]
+
+      // Deduplicate by domain, keep best traffic
+      const domainMap = new Map<string, typeof allCompetitors[0]>()
+      for (const c of allCompetitors) {
+        if (!c.domain) continue
+        const existing = domainMap.get(c.domain)
+        if (!existing || (c.traffic ?? 0) > (existing.traffic ?? 0)) {
+          domainMap.set(c.domain, c)
         }
       }
 
-      // Deduplicate + blacklist filter
-      const uniqueDomains = [...new Set(allDomains)]
-        .filter(d => d && !isBlacklisted(d) && d !== customerDomain)
-        .slice(0, 100)
+      // Quality filter: DR 15–90, traffic >= 100
+      const qualified: BatchMetrics[] = [...domainMap.values()]
+        .filter(c =>
+          !isBlacklisted(c.domain) &&
+          c.domain !== customerDomain &&
+          c.domain_rating !== null && c.domain_rating >= 15 && c.domain_rating <= 90 &&
+          c.traffic !== null && c.traffic >= 100
+        )
+        .sort((a, b) => (b.traffic ?? 0) - (a.traffic ?? 0))
+        .slice(0, 80)
+        .map(c => ({
+          domain: c.domain,
+          domain_rating: c.domain_rating,
+          org_traffic: c.traffic,
+          refdomains: null,
+          backlinks: null,
+          backlinks_dofollow: null,
+          backlinks_nofollow: null,
+          outgoing_links: null,
+        }))
 
-      setStats({ discovered: uniqueDomains.length, afterFilter: 0 })
-
-      // Step 5: Ahrefs batch metrics
-      setStep('batch-metrics')
-      const metrics = await batchDomainMetrics(uniqueDomains, ahrefsKey)
-
-      // Quality filter
-      const qualified: BatchMetrics[] = metrics.filter(m => passesQualityFilter(m))
-      setStats({ discovered: uniqueDomains.length, afterFilter: qualified.length })
+      setStats({ discovered: domainMap.size, afterFilter: qualified.length })
 
       if (qualified.length === 0) {
-        throw new Error('Žádný web neprojde filtrem kvality. Zkuste jiný web zákazníka nebo upravte nastavení.')
+        throw new Error(
+          firstLevel.length === 0
+            ? 'Ahrefs nenašel žádné konkurenční weby. Doména je příliš malá nebo nová.'
+            : 'Žádný konkurent neprojde filtrem kvality (DR 15–90, traffic > 100/měs).'
+        )
       }
 
-      // Step 6: Gemini scores each qualified site
+      // Step 4: Gemini scores each qualified site
       setStep('scoring')
       const scored = await scoreOpportunities(customerUrl.trim(), customerProfile, qualified, geminiKey)
 
       setOpportunities(scored)
       setStep('done')
+      saveSession(customerUrl.trim(), scored, customerProfile, { discovered: domainMap.size, afterFilter: qualified.length })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nepodařilo se dokončit analýzu.')
       setStep('idle')
