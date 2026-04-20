@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useExcelData } from '../hooks/useExcelData'
+import { getGeminiKey } from '../lib/settings'
 import type { WebEntry } from '../types/linkbuilding'
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY as string
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`
+function getGeminiUrl(): string {
+  const key = getGeminiKey()
+  if (!key) throw new Error('Gemini API klíč není nastaven. Přejděte do Nastavení a zadejte klíč.')
+  return `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`
+}
 
 export interface ScoredEntry extends WebEntry {
   score: number
@@ -101,7 +105,7 @@ Vrať JSON (pouze JSON, žádný text navíc):
 
 Score 0–100. Seřaď sestupně.`
 
-  const res = await fetch(GEMINI_URL, {
+  const res = await fetch(getGeminiUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
