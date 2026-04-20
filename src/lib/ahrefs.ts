@@ -63,8 +63,9 @@ function extractDomain(url: string): string {
   }
 }
 
-function today(): string {
+function recentDate(): string {
   const d = new Date()
+  d.setDate(d.getDate() - 7)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
@@ -107,7 +108,7 @@ export async function getOrganicCompetitors(
   const data = await proxyGet('site-explorer/organic-competitors', {
     target: cleanDomain,
     country,
-    date: today(),
+    date: recentDate(),
     select: 'competitor_domain,domain_rating,traffic,keywords_common',
     mode: 'subdomains',
     limit: '20',
@@ -216,7 +217,7 @@ export async function getSourceMetrics(
   const domain = extractDomain(url)
   const data = await proxyGet('site-explorer/metrics', {
     target: domain,
-    date: today(),
+    date: recentDate(),
     select: 'domain_rating,org_traffic',
     mode: 'subdomains',
     protocol: 'both',

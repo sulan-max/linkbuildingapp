@@ -24,7 +24,7 @@ async function testAhrefsKey(key: string): Promise<string> {
 
   // Test 2: site-explorer/organic-competitors — used by Hledání webů (real domain, not ahrefs.com)
   const se = await callProxy('site-explorer/organic-competitors', 'GET', {
-    target: 'seznam.cz', country: 'cz', date: new Date().toISOString().slice(0, 10),
+    target: 'seznam.cz', country: 'cz', date: (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10) })(),
     select: 'competitor_domain,domain_rating,traffic,keywords_common', mode: 'subdomains', limit: '3', order_by: 'traffic:desc',
   }, key)
   lines.push(`site-explorer/organic-competitors: ${se.ok ? '✓ OK' : `✗ ${se.status} — ${se.data.error ?? se.data.message ?? JSON.stringify(se.data).slice(0, 100)}`}`)
