@@ -1,6 +1,6 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
-const ALLOWED_ENDPOINTS = new Set([
+const ALLOWED = new Set([
   'site-explorer/organic-competitors',
   'site-explorer/metrics',
   'serp-overview',
@@ -8,20 +8,47 @@ const ALLOWED_ENDPOINTS = new Set([
   'subscription-info/limits-and-usage',
 ])
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+function readBody(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    let data = ''
+    req.on('data', chunk => { data += chunk })
+    req.on('end', () => {
+      try { resolve(JSON.parse(data)) } catch { reject(new Error('Invalid JSON body')) }
+    })
+    req.on('error', reject)
+  })
+}
+
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type')
+  res.setHeader('Access-Control-Allow-Headers', 'content-type')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end()
+    res.writeHead(200)
+    res.end()
+    return
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    res.writeHead(405, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ error: 'Method not allowed' }))
+    return
   }
 
-  const { endpoint, method = 'GET', params, body, ahrefsKey } = req.body as {
+  const send = (status: number, body: unknown) => {
+    res.writeHead(status, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify(body))
+  }
+
+  let payload: Record<string, unknown>
+  try {
+    payload = await readBody(req) as Record<string, unknown>
+  } catch {
+    return send(400, { error: 'Invalid request body' })
+  }
+
+  const { endpoint, method = 'GET', params, body, ahrefsKey } = payload as {
     endpoint: string
     method?: string
     params?: Record<string, string>
@@ -29,13 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ahrefsKey: string
   }
 
-  if (!ahrefsKey) {
-    return res.status(400).json({ error: 'Chybí Ahrefs API klíč' })
-  }
-
-  if (!ALLOWED_ENDPOINTS.has(endpoint)) {
-    return res.status(400).json({ error: 'Endpoint not allowed' })
-  }
+  if (!ahrefsKey) return send(400, { error: 'Chybí Ahrefs API klíč' })
+  if (!ALLOWED.has(endpoint)) return send(400, { error: 'Endpoint not allowed' })
 
   const baseUrl = `https://api.ahrefs.com/v3/${endpoint}`
 
@@ -45,10 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === 'POST') {
       ahrefsRes = await fetch(baseUrl, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${ahrefsKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${ahrefsKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
     } else {
@@ -60,14 +79,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const raw = await ahrefsRes.text()
     let data: unknown
-    try {
-      data = JSON.parse(raw)
-    } catch {
-      data = { error: `Ahrefs ${ahrefsRes.status}: ${raw.slice(0, 300)}` }
-    }
+    try { data = JSON.parse(raw) } catch { data = { error: `Ahrefs ${ahrefsRes.status}: ${raw.slice(0, 300)}` } }
 
-    return res.status(ahrefsRes.status).json(data)
+    send(ahrefsRes.status, data)
   } catch (err) {
-    return res.status(500).json({ error: String(err) })
+    send(500, { error: String(err) })
   }
 }
