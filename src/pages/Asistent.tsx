@@ -114,7 +114,11 @@ Score 0–100. Seřaď sestupně.`
     }),
   })
 
-  if (!res.ok) throw new Error(`Gemini API chyba: ${res.status}`)
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({})) as Record<string, unknown>
+    const msg = (errBody as { error?: { message?: string } }).error?.message ?? JSON.stringify(errBody).slice(0, 200)
+    throw new Error(`Gemini API chyba: ${res.status} — ${msg}`)
+  }
   const gemini = await res.json()
   const text = gemini.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) throw new Error('Prázdná odpověď od Gemini')
